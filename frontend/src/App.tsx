@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./App.css";
+import { Question } from "./models";
 
 // Use REACT_APP_BACKEND_URL or http://localhost:8080 as the API_BASE
-const API_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:8080";
+const API_BASE =
+  import.meta.env.REACT_APP_BACKEND_URL || "http://localhost:8080";
 
 function App() {
   const [gameSession, setGameSession] = useState(null);
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const startGame = async () => {
     setLoading(true);
@@ -43,10 +45,10 @@ function App() {
     setLoading(false);
   };
 
-  const submitAnswer = async (index) => {
+  const submitAnswer = async (index: number) => {
     // We are submitting the index
     setLoading(true);
-    const currentQuestion = questions[currentQuestionIndex];
+    const currentQuestion: Question = questions[currentQuestionIndex];
     try {
       const res = await fetch(`${API_BASE}/answer`, {
         method: "POST",
