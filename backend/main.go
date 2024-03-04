@@ -41,7 +41,6 @@ func setupServer() (*gin.Engine, error) {
 	router.Use(cors.New(config))
 
 	routes.GameRoutes(router)
-	routes.QuestionsRoutes(router)
 	routes.AnswerRoutes(router)
 
 	return router, nil

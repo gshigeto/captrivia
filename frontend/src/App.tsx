@@ -1,128 +1,25 @@
-import { useState } from "react";
-import "./App.css";
-import { Question } from "./models";
-
-// Use REACT_APP_BACKEND_URL or http://localhost:8080 as the API_BASE
-const API_BASE =
-  import.meta.env.REACT_APP_BACKEND_URL || "http://localhost:8080";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LayoutComponent from "./components/Layout";
+import Game from "./pages/Game";
+import GameFinished from "./pages/GameFinished";
+import GameList from "./pages/GameList";
+import Home from "./pages/Home";
+import JoinGame from "./pages/JoinGame";
 
 function App() {
-  const [gameSession, setGameSession] = useState(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const startGame = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/game/start`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      setGameSession(data.sessionId);
-      fetchQuestions();
-    } catch (err) {
-      setError("Failed to start game.");
-    }
-    setLoading(false);
-  };
-
-  const fetchQuestions = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/questions`);
-      const data = await res.json();
-      setQuestions(data);
-    } catch (err) {
-      setError("Failed to fetch questions.");
-    }
-    setLoading(false);
-  };
-
-  const submitAnswer = async (index: number) => {
-    // We are submitting the index
-    setLoading(true);
-    const currentQuestion: Question = questions[currentQuestionIndex];
-    try {
-      const res = await fetch(`${API_BASE}/answer`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sessionId: gameSession,
-          questionId: currentQuestion.id, // field name is "id", not "questionId"
-          answer: index,
-        }),
-      });
-      const data = await res.json();
-      if (data.correct) {
-        setScore(data.currentScore); // Update score from server's response
-      }
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-      } else {
-        endGame();
-      }
-    } catch (err) {
-      setError("Failed to submit answer.");
-    }
-    setLoading(false);
-  };
-
-  const endGame = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/game/end`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sessionId: gameSession, // need to provide the sessionId
-        }),
-      });
-      const data = await res.json();
-      alert(`Game over! Your score: ${data.finalScore}`); // Use the finalScore from the response
-      setGameSession(null);
-      setQuestions([]);
-      setCurrentQuestionIndex(0);
-      setScore(0);
-    } catch (err) {
-      setError("Failed to end game.");
-    }
-    setLoading(false);
-  };
-
-  if (error) return <div className="error">Error: {error}</div>;
-  if (loading) return <div className="loading">Loading...</div>;
-
   return (
-    <div className="App">
-      {!gameSession ? (
-        <button onClick={startGame}>Start Game</button>
-      ) : (
-        <div>
-          <h3>{questions[currentQuestionIndex]?.questionText}</h3>
-          {questions[currentQuestionIndex]?.options.map((option, index) => (
-            <button
-              key={index} // Key should be unique for each child in a list, use index as the key
-              onClick={() => submitAnswer(index)} // Pass index instead of option
-              className="option-button"
-            >
-              {option}
-            </button>
-          ))}
-          <p className="score">Score: {score}</p>
-        </div>
-      )}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LayoutComponent />}>
+          <Route index element={<Home />} />
+          <Route path="/join" index element={<JoinGame />} />
+          <Route path="/games" index element={<GameList />} />
+          <Route path="/game/play" index element={<Game />} />
+          <Route path="/game/finish" index element={<GameFinished />} />
+          <Route path="*" element={<Navigate to="" />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

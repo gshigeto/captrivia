@@ -3,26 +3,13 @@ package controllers
 import (
 	"encoding/json"
 	"math/rand"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/ProlificLabs/captrivia/models"
-	"github.com/gin-gonic/gin"
 )
 
-func GetQuestionsHandler(c *gin.Context) {
-	questions, err := LoadQuestions()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	
-	shuffledQuestions := ShuffleQuestions(questions)
-	c.JSON(http.StatusOK, shuffledQuestions[:10])
-}
-
-func LoadQuestions() ([]models.Question, error) {
+func LoadQuestions(limit int) ([]models.Question, error) {
 	fileBytes, err := os.ReadFile("questions.json")
 	if err != nil {
 		return nil, err
@@ -33,10 +20,10 @@ func LoadQuestions() ([]models.Question, error) {
 		return nil, err
 	}
 
-	return questions, nil
+	return shuffleQuestions(questions[:limit]), nil
 }
 
-func ShuffleQuestions(questions []models.Question) []models.Question {
+func shuffleQuestions(questions []models.Question) []models.Question {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	qs := make([]models.Question, len(questions))
 
