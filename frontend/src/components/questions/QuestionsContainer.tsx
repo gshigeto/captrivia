@@ -22,22 +22,20 @@ const QuestionsContainer = ({
         submitAnswer={submitAnswer}
       />
 
-      {!!questions.length && (
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={6} display="flex" alignItems="end">
-            Question: {currentQuestionIndex + 1} / {questions.length}
-          </Grid>
-          <Grid
-            item
-            xs={6}
-            display="flex"
-            alignItems="center"
-            justifyContent="end"
-          >
-            <ScoreComponent score={score} />
-          </Grid>
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid item xs={6} display="flex" alignItems="end">
+          Question: {currentQuestionIndex + 1} / {questions.length}
         </Grid>
-      )}
+        <Grid
+          item
+          xs={6}
+          display="flex"
+          alignItems="center"
+          justifyContent="end"
+        >
+          <ScoreComponent score={score} />
+        </Grid>
+      </Grid>
     </>
   );
 };

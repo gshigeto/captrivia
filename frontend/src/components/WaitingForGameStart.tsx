@@ -14,11 +14,10 @@ import {
   Typography,
   styled,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getJoinGameUrl } from "../api";
 import { GameSession } from "../models";
 import { useSnackBar } from "../providers/snackbar";
-import Socket, { SocketEventNames } from "../utils/socket";
 import { FancyDefaultTitle } from "./FancyTitle";
 const ClickableContentCopyIcon = styled(ContentCopyIcon)`
   cursor: pointer;
@@ -85,7 +84,10 @@ const WaitingForGameStart = ({
               loading={loading}
               variant="contained"
               color="primary"
-              onClick={startGame}
+              onClick={() => {
+                setLoading(true);
+                startGame();
+              }}
             >
               Start Game
             </LoadingButton>

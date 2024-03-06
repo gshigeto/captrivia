@@ -83,7 +83,7 @@ const JoinGame = () => {
         <Card sx={{ p: 2 }}>
           <form noValidate autoComplete="off">
             <TextField
-              id="standard-basic"
+              inputProps={{ "data-testid": "game-input" }}
               fullWidth
               label="Enter Game ID"
               variant="standard"
@@ -103,7 +103,7 @@ const JoinGame = () => {
             />
             <TextField
               sx={{ mt: 2 }}
-              id="standard-basic"
+              inputProps={{ "data-testid": "name-input" }}
               fullWidth
               label="Enter Your Name"
               variant="standard"

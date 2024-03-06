@@ -219,10 +219,15 @@ const Game: React.FC = () => {
           submitAnswer={submitAnswerHandler}
           score={score}
         />
-        <PlayerScores
-          playerScores={playerScores}
-          sessionId={currentGameState?.sessionId}
-        ></PlayerScores>
+        {
+          /* Show player scores if multiplayer game */
+          game?.multiplayer && (
+            <PlayerScores
+              playerScores={playerScores}
+              sessionId={currentGameState?.sessionId}
+            ></PlayerScores>
+          )
+        }
       </Container>
     </>
   );

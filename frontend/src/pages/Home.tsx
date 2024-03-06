@@ -57,7 +57,7 @@ const Home = () => {
         <Card sx={{ p: 2 }}>
           <form noValidate autoComplete="off">
             <TextField
-              id="standard-basic"
+              inputProps={{ "data-testid": "name-input" }}
               fullWidth
               label="Enter Your Name"
               variant="standard"
@@ -85,8 +85,6 @@ const Home = () => {
               type="number"
               required
               value={questions}
-              error={error !== null}
-              helperText={error}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                 const numberOfQuestions = Number(event.target.value);
                 if (numberOfQuestions < 1) {
