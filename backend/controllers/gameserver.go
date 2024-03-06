@@ -70,7 +70,6 @@ func GetGameHandler(c *gin.Context) {
 	}
 
 	questions := RemoveAnswers(gameServer.Questions)
-
 	response := gin.H{
 		"id":       gameServer.ID,
 		"started": !gameServer.Started.IsZero(),
@@ -158,19 +157,12 @@ func StartGameHandler(c *gin.Context) {
 		Multiplayer bool `json:"multiplayer"`
 		Questions int `json:"questions"`
 	}
-	fmt.Println(request.Multiplayer, request.Name)
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	var numberOfQuestions int
-	if request.Questions == 0 {
-		numberOfQuestions = 10
-	} else {
-		numberOfQuestions = request.Questions
-	}
-	questions, err := LoadQuestions(numberOfQuestions)
+	questions, err := LoadQuestions(request.Questions)
 	if err != nil {
 		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

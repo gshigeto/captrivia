@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -92,8 +91,6 @@ func (h *Hub) RegisterNewClient(client *Client) {
 		h.Clients[client.ID] = connections
 	}
 	h.Clients[client.ID][client] = true
-
-	fmt.Println("Size of clients: ", len(h.Clients[client.ID]))
 }
 
 //function to remvoe client from room
@@ -104,7 +101,6 @@ func (h *Hub) RemoveClient(client *Client) {
 	if _, ok := h.Clients[client.ID]; ok {
 		delete(h.Clients[client.ID], client)
 		close(client.Send)
-		fmt.Println("Removed client")
 	}
 }
 
@@ -174,7 +170,6 @@ func (h *Hub) HandleMessage(message Message) {
 
 	//Check if the message is a type of "notification"
 	if message.Type == "notification" {
-		fmt.Println("Notification: ", message.Content)
 		clients := h.Clients[message.Recipient]
 		for client := range clients {
 			select {

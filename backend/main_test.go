@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -41,8 +42,18 @@ func TestMain(m *testing.M) {
 	os.Exit(runTests)
 }
 
+func createGameStartPayload(multiple bool) *bytes.Reader {
+	mcPostBody := map[string]interface{}{
+		"name": "Billy Bob",
+		"multiplayer": multiple,
+		"questions": 5,
+	}
+	body, _ := json.Marshal(mcPostBody)
+	return bytes.NewReader(body)
+}
+
 func TestStartGameHandler(t *testing.T) {
-	resp, err := http.Post(testServer.URL+"/game/start", "application/json", nil)
+	resp, err := http.Post(testServer.URL+"/game/start", "application/json", createGameStartPayload(false))
 	if err != nil {
 		t.Fatalf("Failed to make request: %v", err)
 	}
@@ -68,7 +79,7 @@ func TestStartGameHandler(t *testing.T) {
 // test a full game
 func TestFullGame(t *testing.T) {
 	// Start a new game
-	resp, err := http.Post(testServer.URL+"/game/start", "application/json", nil)
+	resp, err := http.Post(testServer.URL+"/game/start", "application/json", createGameStartPayload(false))
 	if err != nil {
 		t.Fatalf("Failed to start a new game: %v", err)
 	}
@@ -85,13 +96,17 @@ func TestFullGame(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to decode JSON response: %v", err)
 	}
+	gameID, exists := startGameResponse["gameId"]
+	if !exists {
+		t.Fatalf("Response does not contain 'gameId'")
+	}
 	sessionID, exists := startGameResponse["sessionId"]
 	if !exists {
 		t.Fatalf("Response does not contain 'sessionId'")
 	}
 
 	// Get questions
-	resp, err = http.Get(testServer.URL + "/questions")
+	resp, err = http.Get(testServer.URL + "/game/" + gameID + "/" + sessionID)
 	if err != nil {
 		t.Fatalf("Failed to get questions: %v", err)
 	}
@@ -103,8 +118,24 @@ func TestFullGame(t *testing.T) {
 	}
 
 	// Decode JSON response to get the questions
+	var getGameResponse map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&getGameResponse)
+	if err != nil {
+		t.Fatalf("Failed to decode JSON response: %v", err)
+	}
+
+	gameServerQuestions, exists := getGameResponse["questions"]
+	if !exists {
+		t.Fatalf("Response does not contain 'questions'")
+	}
+
+	questionsBytes, err := json.Marshal(gameServerQuestions)
+	if err != nil {
+		t.Fatalf("Failed to marshal 'questions': %v", err)
+	}
+
 	var questions []models.Question
-	err = json.NewDecoder(resp.Body).Decode(&questions)
+	err = json.NewDecoder(bytes.NewReader(questionsBytes)).Decode(&questions)
 	if err != nil {
 		t.Fatalf("Failed to decode JSON response: %v", err)
 	}
@@ -120,7 +151,7 @@ func TestFullGame(t *testing.T) {
 			t.Fatalf("Backend returned answer index")
 		}
 
-		answerPayload := fmt.Sprintf(`{"sessionId":"%s", "questionId":"%s", "answer":%d}`, sessionID, question.ID, 0)
+		answerPayload := fmt.Sprintf(`{"gameId":"%s","sessionId":"%s", "questionId":"%s", "answer":%d}`, gameID, sessionID, question.ID, 0)
 		answerReader := strings.NewReader(answerPayload)
 		resp, err = http.Post(testServer.URL+"/answer", "application/json", answerReader)
 		if err != nil {
@@ -145,7 +176,7 @@ func TestFullGame(t *testing.T) {
 	}
 
 	// End the game
-	endGamePayload := fmt.Sprintf(`{"sessionId":"%s"}`, sessionID)
+	endGamePayload := fmt.Sprintf(`{"gameId":"%s","sessionId":"%s"}`, gameID, sessionID)
 	endGameReader := strings.NewReader(endGamePayload)
 	resp, err = http.Post(testServer.URL+"/game/end", "application/json", endGameReader)
 	if err != nil {
