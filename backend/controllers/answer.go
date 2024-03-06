@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,25 +31,29 @@ func AnswerHandler(c *gin.Context) {
 		return
 	}
 	
-	correct, err := gameServer.CheckAnswer(submittedAnswer.QuestionID, submittedAnswer.Answer)
+	correct, alreadyAnswered, err := gameServer.CheckAnswer(session.ID, submittedAnswer.QuestionID, submittedAnswer.Answer)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	}
-	session.CurrentQuestion++ // Increment the current question
 
-	// Check to see if the current question is the last question and mark finished
-	if session.CurrentQuestion >= len(gameServer.Questions) {
-		session.Finished = time.Now()
-	}
-
-	if correct {
+	if !alreadyAnswered && correct {
+		gameServer.Questions[session.CurrentQuestion].CorrectSession = session.ID
 		session.Score += 10 // Increment score for correct answer
 	}
 
+	session.CurrentQuestion++ // Increment the current question
+	// Check to see if the current question is the last question and mark finished
+	if session.CurrentQuestion >= len(gameServer.Questions) {
+		session.MarkFinished()
+	}
+
+	SendScoreUpdateMessageToAllClients(gameServer)
+
 	c.JSON(http.StatusOK, gin.H{
-		"correct":      correct,
-		"currentScore": session.Score, // Return the current score
-		"nextQuestionIndex": session.CurrentQuestion, // Return the current question
+		"alreadyAnswered": 		alreadyAnswered,
+		"correct":      			correct,
+		"currentScore":				session.Score, // Return the current score
+		"nextQuestionIndex": 	session.CurrentQuestion, // Return the current question
 	})
 }

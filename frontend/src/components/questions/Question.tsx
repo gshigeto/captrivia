@@ -1,5 +1,5 @@
 import { Button, Stack } from "@mui/material";
-import { Question } from "../models";
+import { Question } from "../../models";
 
 interface QuestionProps {
   question: Question;

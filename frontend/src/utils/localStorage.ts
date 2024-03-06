@@ -25,11 +25,25 @@ export const getLocalStorageGames = (): GameSession[] => {
  * const games = updateLocalStorageGames(game);
  * console.log(games);
  */
-export const updateLocalStorageGames = (game: GameSession) => {
+export const updateLocalStorageGames = (game: GameSession): GameSession[] => {
   const games = getLocalStorageGames();
   games.push(game);
   localStorage.setItem("games", JSON.stringify(games));
   return games;
+};
+
+/**
+ * Check if gameId exists in local storage games and return that game object
+ * @param {string} gameId - Id of the game to check
+ * @returns {GameSession | null} - Game object if gameId exists, null otherwise
+ * @example
+ * const game = getLocalStorageGameById("123");
+ * console.log(game);
+ */
+export const getLocalStorageGameById = (gameId: string): GameSession | null => {
+  const games = getLocalStorageGames();
+  const game = games.find((game) => game.gameId === gameId);
+  return game || null;
 };
 
 /**
@@ -40,7 +54,7 @@ export const updateLocalStorageGames = (game: GameSession) => {
  * const games = deleteLocalStorageGame("123");
  * console.log(games);
  */
-export const deleteLocalStorageGame = (gameId: string) => {
+export const deleteLocalStorageGame = (gameId: string): GameSession[] => {
   const games = getLocalStorageGames();
   const newGames = games.filter((game) => game.gameId !== gameId);
   localStorage.setItem("games", JSON.stringify(newGames));
@@ -78,6 +92,6 @@ export const getLocalStorageCurrentGame = (): GameSession | null => {
  * setLocalStorageCurrentGame(game);
  * console.log("Game set in local storage");
  */
-export const setLocalStorageCurrentGame = (game: GameSession) => {
+export const setLocalStorageCurrentGame = (game: GameSession): void => {
   localStorage.setItem("currentGame", JSON.stringify(game));
 };

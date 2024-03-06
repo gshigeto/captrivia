@@ -3,6 +3,7 @@ import { GameSession } from "../models";
 import {
   deleteLocalStorageGame,
   getLocalStorageCurrentGame,
+  getLocalStorageGameById,
   getLocalStorageGames,
   setLocalStorageCurrentGame,
   updateLocalStorageGames,
@@ -11,17 +12,21 @@ import {
 export const GamesContext = createContext<{
   games: GameSession[];
   currentGame: GameSession | null;
-  startGame: (game: GameSession) => void;
+  startGame: (game: GameSession, existing?: boolean) => void;
   finishGame: () => void;
+  getGame: (gameId: string) => GameSession | null;
   loadGame: (gameId: string) => void;
   deleteGame: (gameId: string) => void;
 }>({
   games: [],
   currentGame: null,
-  startGame: (game: GameSession) => {
+  startGame: (game: GameSession, existing?: boolean) => {
     throw new Error("Method not implemented");
   },
   finishGame: () => {
+    throw new Error("Method not implemented");
+  },
+  getGame: (gameId: string) => {
     throw new Error("Method not implemented");
   },
   loadGame: (gameId: string) => {
@@ -38,17 +43,26 @@ export const GamesProvider: React.FC<PropsWithChildren> = ({ children }) => {
     getLocalStorageCurrentGame()
   );
 
-  const startGame = (game: GameSession) => {
-    const newGames = updateLocalStorageGames(game);
-    setLocalStorageCurrentGame(game);
+  const startGame = (game: GameSession, existing = false) => {
+    if (!existing) {
+      const newGames = updateLocalStorageGames(game);
+      setGames(newGames);
+    }
 
-    setGames(newGames);
+    setLocalStorageCurrentGame(game);
     setCurrentGame(game);
   };
 
   const finishGame = () => {
     setCurrentGame(null);
   };
+
+  const getGame = (gameId: string): GameSession | null => {
+    const game = getLocalStorageGameById(gameId);
+    return game;
+  };
+
+  const joinGame = (gameSession: GameSession): void => {};
 
   const loadGame = (gameId: string) => {
     const game = games.find((game) => game.gameId === gameId);
@@ -71,6 +85,7 @@ export const GamesProvider: React.FC<PropsWithChildren> = ({ children }) => {
         currentGame,
         startGame,
         finishGame,
+        getGame,
         loadGame,
         deleteGame,
       }}

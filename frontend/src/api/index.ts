@@ -1,4 +1,4 @@
-import { AnswerResponse, Game, GameSession, Question } from "../models";
+import { AnswerResponse, EndGameResponse, Game, GameSession } from "../models";
 
 // Use REACT_APP_BACKEND_URL or http://localhost:8080 as the API_BASE
 const API_BASE =
@@ -29,6 +29,7 @@ const fetchWrapper = async <T>(
 interface NewGameRequest {
   name: string;
   multiplayer: boolean;
+  questions: number;
 }
 /**
  * Start a new game with the given name and multiplayer option
@@ -43,6 +44,7 @@ interface NewGameRequest {
 export const startGame = async ({
   name,
   multiplayer,
+  questions,
 }: NewGameRequest): Promise<GameSession> => {
   try {
     return await fetchWrapper<GameSession>(`${API_BASE}/game/start`, {
@@ -50,7 +52,7 @@ export const startGame = async ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name, multiplayer }),
+      body: JSON.stringify({ name, multiplayer, questions }),
     });
   } catch (error) {
     throw error;
@@ -79,17 +81,27 @@ export const fetchGame = async (
 };
 
 /**
- * Fetch questions for the given gameId
+ * Join a game with the given gameId and name
  * @param gameId - Id of the game
- * @returns - Array of questions
- * @throws - Error if failed to fetch questions
+ * @param name - Name of the player
+ * @returns - GameSession object
+ * @throws - Error if failed to join game
  * @example
- * const questions = await fetchQuestions("123");
- * console.log(questions);
+ * const session = await joinGame("123", "John");
+ * console.log(session);
  */
-export const fetchQuestions = async (gameId: string): Promise<Question[]> => {
+export const joinGame = async (
+  gameId: string,
+  name: string
+): Promise<GameSession> => {
   try {
-    return await fetchWrapper<Question[]>(`${API_BASE}/questions/${gameId}`);
+    return await fetchWrapper<GameSession>(`${API_BASE}/game/join`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ gameId, name }),
+    });
   } catch (error) {
     throw error;
   }
@@ -136,9 +148,12 @@ export const submitAnswer = async (
  * const data = await endGame("123", "456");
  * console.log(data);
  */
-export const endGame = async (gameId: string, sessionId: string) => {
+export const endGame = async (
+  gameId: string,
+  sessionId: string
+): Promise<EndGameResponse> => {
   try {
-    return await fetchWrapper(`${API_BASE}/game/end`, {
+    return await fetchWrapper<EndGameResponse>(`${API_BASE}/game/end`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,4 +163,16 @@ export const endGame = async (gameId: string, sessionId: string) => {
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Get the URL to join the game
+ * @param gameId - Id of the game
+ * @returns - URL to join the game
+ * @example
+ * const url = getJoinGameUrl("123");
+ * console.log(url);
+ */
+export const getJoinGameUrl = (gameId: string): string => {
+  return `${window.location.origin}/join?gameId=${gameId}`;
 };

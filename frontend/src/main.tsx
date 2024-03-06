@@ -4,15 +4,18 @@ import App from "./App";
 import "./index.css";
 import { GamesProvider } from "./providers/games";
 import reportWebVitals from "./reportWebVitals";
+import { SnackBarProvider } from "./providers/snackbar";
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <GamesProvider>
-        <App />
-      </GamesProvider>
+      <SnackBarProvider>
+        <GamesProvider>
+          <App />
+        </GamesProvider>
+      </SnackBarProvider>
     </React.StrictMode>
   );
 }

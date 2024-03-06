@@ -7,17 +7,15 @@ import (
 )
 type SessionStore struct {
 	sync.Mutex
-	Owner string
 	Sessions map[string]*PlayerSession
 }
 
-func (store *SessionStore) CreateSession(name string, owner bool) string {
+func (store *SessionStore) CreateSession(name string) string {
 	store.Lock()
 	defer store.Unlock()
 
 	uniqueSessionID := utils.GenerateRandomID()
-	store.Owner = uniqueSessionID
-	store.Sessions[uniqueSessionID] = &PlayerSession{Score: 0, Name: name}
+	store.Sessions[uniqueSessionID] = &PlayerSession{ID: uniqueSessionID, Score: 0, Name: name}
 
 	return uniqueSessionID
 }

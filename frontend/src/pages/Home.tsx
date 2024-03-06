@@ -1,19 +1,21 @@
 import { LoadingButton } from "@mui/lab";
-import { Card, Container, Snackbar, TextField } from "@mui/material";
+import { Card, Container, TextField } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { startGame as startGameApi } from "../api";
 import { FancyDefaultTitle } from "../components/FancyTitle";
 import { useGames } from "../providers/games";
+import { useSnackBar } from "../providers/snackbar";
 
 const Home = () => {
   const [name, setName] = useState("");
+  const [questions, setQuestions] = useState(10);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<"single" | "multi" | null>(null);
-  const [startGameError, setStartGameError] = useState("");
 
   const { startGame } = useGames();
   const navigate = useNavigate();
+  const { setSnackbarMessage } = useSnackBar();
 
   const startGameHandler = async (
     ev: React.MouseEvent<HTMLButtonElement>,
@@ -29,12 +31,12 @@ const Home = () => {
 
     setLoading(multiplayer ? "multi" : "single");
     try {
-      const gameSession = await startGameApi({ name, multiplayer });
+      const gameSession = await startGameApi({ name, multiplayer, questions });
 
       startGame(gameSession);
       navigate("/game/play");
     } catch (error) {
-      setStartGameError("Failed to start game.");
+      setSnackbarMessage("Failed to start game.");
     }
 
     setLoading(null);
@@ -74,6 +76,30 @@ const Home = () => {
               }}
             />
 
+            <TextField
+              sx={{ mt: 2 }}
+              id="standard-basic"
+              fullWidth
+              label="Enter Number of Questions (Max 20)"
+              variant="standard"
+              type="number"
+              required
+              value={questions}
+              error={error !== null}
+              helperText={error}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const numberOfQuestions = Number(event.target.value);
+                if (numberOfQuestions < 1) {
+                  return setQuestions(1);
+                }
+                if (numberOfQuestions > 20) {
+                  return setQuestions(20);
+                }
+
+                setQuestions(numberOfQuestions);
+              }}
+            />
+
             <LoadingButton
               variant="contained"
               fullWidth
@@ -98,12 +124,6 @@ const Home = () => {
           </form>
         </Card>
       </Container>
-      <Snackbar
-        open={startGameError !== ""}
-        onClose={() => setStartGameError("")}
-        autoHideDuration={3000}
-        message={startGameError}
-      />
     </>
   );
 };

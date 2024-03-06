@@ -1,21 +1,49 @@
 import { Container } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { endGame } from "../api";
 import { FancyDefaultTitle } from "../components/FancyTitle";
-import { GameSession } from "../models";
+import PlayerScores from "../components/PlayerScores";
+import { EndGameResponse, GameSession, ScoreUpdate } from "../models";
 import { useGames } from "../providers/games";
+import Socket, { SocketEventNames } from "../utils/socket";
 
 const GameFinished = () => {
-  const { currentGame } = useGames();
-  const navigate = useNavigate();
-
   const [currentGameState, setCurrentGameState] = useState<GameSession | null>(
     null
   );
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [gameFinishDetails, setGameFinishDetails] = useState<any>(null);
+  const [endGameStats, setEndGameStats] = useState<EndGameResponse | null>(
+    null
+  );
+  const [playerScores, setPlayerScores] = useState<ScoreUpdate[]>([]);
+
+  const { currentGame } = useGames();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (endGameStats && endGameStats.multiplayer) {
+      const socket = new Socket(`/game/${currentGameState?.gameId}/ws`);
+      socket.on<ScoreUpdate[]>(SocketEventNames.SCORE_UPDATE, (data) => {
+        setPlayerScores(data);
+      });
+      socket.on<ScoreUpdate[]>(SocketEventNames.GAME_FINISHED, (data) => {
+        setPlayerScores(data);
+        setEndGameStats((prev) => {
+          if (prev) {
+            return { ...prev, finished: true };
+          }
+          return prev;
+        });
+        socket && socket.closeConnection();
+      });
+
+      return () => {
+        socket && socket.closeConnection();
+      };
+    }
+  }, [endGameStats]);
 
   const endGameHandler = async () => {
     try {
@@ -23,7 +51,7 @@ const GameFinished = () => {
         currentGameState?.gameId!,
         currentGameState?.sessionId!
       );
-      setGameFinishDetails(data);
+      setEndGameStats(data);
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -78,12 +106,20 @@ const GameFinished = () => {
     <>
       <Container maxWidth="sm">
         <FancyDefaultTitle variant="h5" gutterBottom sx={{ pt: 4 }}>
-          Game Finished
+          {endGameStats?.finished
+            ? "Game Finished!"
+            : "Waiting for game to finish..."}
         </FancyDefaultTitle>
-        {gameFinishDetails && (
+        {endGameStats?.multiplayer && (
+          <PlayerScores
+            playerScores={playerScores}
+            sessionId={currentGameState?.sessionId}
+          />
+        )}
+
+        {!endGameStats?.multiplayer && (
           <div>
-            <h3>Final Score: {gameFinishDetails.finalScore}</h3>
-            <Link to="/">Go back to home</Link>
+            <h3>Final Score: {endGameStats?.finalScore}</h3>
           </div>
         )}
       </Container>

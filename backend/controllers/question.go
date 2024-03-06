@@ -25,6 +25,13 @@ func LoadQuestions(limit int) ([]models.Question, error) {
 
 func shuffleQuestions(questions []models.Question) []models.Question {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.Shuffle(len(questions), func(i, j int) {
+		questions[i], questions[j] = questions[j], questions[i]
+	})
+	return questions
+}
+
+func RemoveAnswers(questions []models.Question) []models.Question {
 	qs := make([]models.Question, len(questions))
 
 	// Copy the questions manually, instead of with copy(), so that we can remove
@@ -33,8 +40,5 @@ func shuffleQuestions(questions []models.Question) []models.Question {
 		qs[i] = models.Question{ID: q.ID, QuestionText: q.QuestionText, Options: q.Options}
 	}
 
-	rand.Shuffle(len(qs), func(i, j int) {
-		qs[i], qs[j] = qs[j], qs[i]
-	})
 	return qs
 }
