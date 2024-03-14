@@ -122,6 +122,19 @@ const GameFinished = () => {
             <h3>Final Score: {endGameStats?.finalScore}</h3>
           </div>
         )}
+
+        {endGameStats?.leaderboard && (
+          <div>
+            <h3>Leaderboard</h3>
+            <ol>
+              {Object.keys(endGameStats?.leaderboard).map((key, index) => (
+                <li key={index}>
+                  {key} - {endGameStats?.leaderboard[key]}%
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </Container>
     </>
   );

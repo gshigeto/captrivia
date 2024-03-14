@@ -27,6 +27,7 @@ export interface EndGameResponse {
   finalScore: number;
   multiplayer: boolean;
   finished: boolean;
+  leaderboard: { [name: string]: number };
 
   // This will be sent if multiplayer
   players?: ScoreUpdate[];

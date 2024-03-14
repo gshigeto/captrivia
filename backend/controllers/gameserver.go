@@ -178,8 +178,31 @@ func StartGameHandler(c *gin.Context) {
 	})
 }
 
+func getSessionScoresFromGameServer() map[string]float32 {
+	var playerScores = make(map[string]float32)
+	for _, gameServer := range models.GameServers {
+		for _, session := range gameServer.Sessions.Sessions {
+			// Calculate the score for the player based off the number of questions
+			score := (float32(session.Score / 10) / float32(len(gameServer.Questions))) * 100
+
+
+			currentScore, exists := playerScores[session.Name]
+			if exists {
+				playerScores[session.Name] = (currentScore + score) / 2
+				continue
+			} else {
+				playerScores[session.Name] = score
+			}
+		}
+	}
+
+	return playerScores
+}
+
 // Get the details of the game server and the session
 func getGameEndDetails(gameServer *models.GameServer, session *models.PlayerSession) gin.H {
+	leaderboard := getSessionScoresFromGameServer()
+
 	if gameServer.Multiplayer {
 		sessions := gameServer.Sessions.Sessions
 		existingPlayersContent := make([]map[string]string, 0)
@@ -192,12 +215,14 @@ func getGameEndDetails(gameServer *models.GameServer, session *models.PlayerSess
 			"multiplayer": gameServer.Multiplayer,
 			"finished": !gameServer.Finished.IsZero(),
 			"players": existingPlayersContent,
+			"leaderboard": leaderboard,
 		}
 	}
 	return gin.H{
 		"finalScore": session.Score,
 		"multiplayer": gameServer.Multiplayer,
 		"finished": !gameServer.Finished.IsZero(),
+		"leaderboard": leaderboard,
 	}
 }
 
